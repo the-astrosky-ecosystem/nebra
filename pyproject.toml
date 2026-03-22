@@ -1,0 +1,15 @@
+[project]
+name = "nebra"
+version = "0.1.0"
+description = "Stream or send time-critical scientific data live and for free on the ATProtocol."
+readme = "README.md"
+authors = [{ name = "emilyhunt", email = "emily.hunt.physics@gmail.com" }]
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+nebra = "nebra:main"
+
+[build-system]
+requires = ["uv_build>=0.10.7,<0.11.0"]
+build-backend = "uv_build"
