@@ -5,7 +5,9 @@ description = "Stream or send time-critical scientific data live and for free on
 readme = "README.md"
 authors = [{ name = "emilyhunt", email = "emily.hunt.physics@gmail.com" }]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "atproto>=0.0.65",
+]
 
 [project.scripts]
 nebra = "nebra:main"
