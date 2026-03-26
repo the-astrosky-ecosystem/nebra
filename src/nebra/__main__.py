@@ -1,11 +1,19 @@
-from time import time
+from .jetstream import stream
+from .client import send
+import click
+
+
+@click.group()
+def cli():
+    pass
 
 
 if __name__ == "__main__":
-    from .jetstream import event_stream
+    # stream_events(collections=["eco.astrosky.transient.*"])
+    # one_day_ago = int((time() - 24 * 60**2) * 1e6)
+    # stream_events(cursor=one_day_ago, handles=["emily.space"])
+    # stream_events(cursor=None, handles=["emily.space"])
+    cli.add_command(stream)
+    # cli.add_command(send)
 
-    # event_stream(collections=["eco.astrosky.transient.*"])
-    one_day_ago = int((time() - 24 * 60**2) * 1e6)
-    # one_day_ago = 1000000
-    # event_stream(cursor=one_day_ago, handles=["emily.space"])
-    event_stream(cursor=None, handles=["emily.space"])
+    cli()

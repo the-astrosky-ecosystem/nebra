@@ -3,7 +3,9 @@ atprotocol.
 """
 
 import os
+import json
 from gcn_kafka import Consumer
+from nebra import send, get_atproto_utc_time
 
 
 client_id = os.getenv("GCN_CLIENT_ID", None)
@@ -15,12 +17,7 @@ if client_id is None or client_secret is None:
         "You must set the GCN_CLIENT_ID and GCN_CLIENT_SECRET env variables."
     )
 
-
-# Connect as a consumer (client "tae-gcn")
-# Warning: don't share the client secret with others.
 consumer = Consumer(client_id=client_id, client_secret=client_secret)
-
-# Subscribe to topics and receive alerts
 consumer.subscribe(
     [
         "gcn.circulars",
@@ -35,12 +32,52 @@ consumer.subscribe(
         # "gcn.heartbeat",
     ]
 )
+
+
+def _remove_large_fields(value):
+    if "healpix_file" in value:
+        value.pop("healpix_file")
+    if "event" in value:
+        if "skymap" in value["event"]:
+            value["event"].pop("skymap")
+    if "external_coinc" in value:
+        if "combined_skymap" in value["external_coinc"]:
+            value["external_coinc"].pop("combined_skymap")
+
+
+def _send_gcn_event(message, value):
+    event = {
+        "$type": "eco.astrosky.transient.gcn",
+        "topic": message.topic(),
+        "eventID": message.offset(),
+        "data": json.dumps(value),
+        "createdAt": get_atproto_utc_time(),
+    }
+    send(event)
+
+
+def _write_to_file(message, value):
+    with open("test_file", "a") as file:
+        file.write(
+            f"-----------------------\ntopic={message.topic()}, offset={message.offset()}\n"
+            + json.dumps(value, indent=2)
+        )
+
+
 while True:
     for message in consumer.consume(timeout=1):
         if message.error():
             print(message.error())
             continue
+
         # Print the topic and message ID
-        print(f"topic={message.topic()}, offset={message.offset()}")
-        value = message.value()
-        print(value)
+        print(f"New message! topic={message.topic()}, offset={message.offset()}")
+        value = json.loads(message.value())
+
+        # Process it
+        print("Sending...")
+        _remove_large_fields(value)
+        _send_gcn_event(message, value)
+        _write_to_file(message, value)
+
+        print("Done!")

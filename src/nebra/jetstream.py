@@ -1,3 +1,9 @@
+"""Client to connect to a jetstream instance and stream ATProto events.
+
+Mainly adapted from this code, © Dave Peck (MIT License):
+https://gist.github.com/davepeck/5484fc026a2e8269cf1ead00fff0ef8f
+"""
+
 import os
 import platform
 import typing as t
@@ -7,13 +13,75 @@ import zstandard as zstd
 import json
 from httpx_ws import connect_ws
 from atproto import IdResolver
+import click
 
 
-def event_stream(
+@click.command()
+@click.option(
+    "--collection",
+    "-c",
+    "collections",
+    multiple=True,
+    help="The collections to subscribe to. If not provided, subscribe to all.",
+    type=str,
+    default=("eco.astrosky.transient.*",),
+)
+@click.option(
+    "--did",
+    "-d",
+    "dids",
+    multiple=True,
+    help="The DIDs to subscribe to. If not provided, subscribe to all.",
+    type=str,
+    default=tuple(),
+)
+@click.option(
+    "--handle",
+    "-h",
+    "handles",
+    multiple=True,
+    help="The ATProto handles to subscribe to. If not provided, subscribe to all.",
+    type=str,
+    default=tuple(),
+)
+@click.option(
+    "--cursor",
+    "-u",
+    help="The cursor to start from. If not provided or set to zero, start from 'now'. Note that the cursor can only go as far back as the Jetstream instance has indexed.",
+    type=int,
+    default=0,
+)
+@click.option(
+    "--url",
+    "base_url",
+    help="The Jetstream URL to connect to.",
+    type=str,
+)
+@click.option(
+    "--geo",
+    "-g",
+    help="If using a Bluesky PBC Jetstream instance, choose which public Jetstream service geography to connect to.",
+    type=click.Choice(["us-west", "us-east"]),
+    default="us-east",
+)
+@click.option(
+    "--instance",
+    "-i",
+    help="If using a Bluesky PBC Jetstream instance, choose which public Jetstream instance number to connect to. Currently, 1 and 2 are available.",
+    type=int,
+    default=1,
+)
+@click.option(
+    "--compress",
+    is_flag=True,
+    help="Enable Zstandard compression.",
+    default=True,
+)
+def stream(
     collections: t.Sequence[str] = tuple(),
     dids: t.Sequence[str] = tuple(),
     handles: t.Sequence[str] = tuple(),
-    cursor: int | None = 0,
+    cursor: int = 0,
     base_url: str | None = None,
     geo: t.Literal["us-west", "us-east"] = "us-west",
     instance: int = 1,
@@ -76,7 +144,7 @@ def get_jetstream_query_url(
         query.append(("cursor", str(cursor)))
     if compress:
         query.append(("compress", "true"))
-    query_enc = urlencode(query, safe=":.")
+    query_enc = urlencode(query, safe=":.*")
     return f"{base_url}?{query_enc}" if query_enc else base_url
 
 
