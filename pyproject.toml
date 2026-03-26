@@ -7,10 +7,17 @@ authors = [{ name = "emilyhunt", email = "emily.hunt.physics@gmail.com" }]
 requires-python = ">=3.11"
 dependencies = [
     "atproto>=0.0.65",
+    "httpx-ws>=0.8.2",
+    "zstandard>=0.25.0",
 ]
 
 [project.scripts]
 nebra = "nebra:main"
+
+[project.optional-dependencies]
+subscriptions = [
+    "gcn-kafka>=0.3.4",
+]
 
 [build-system]
 requires = ["uv_build>=0.10.7,<0.11.0"]
