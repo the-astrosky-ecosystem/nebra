@@ -1,6 +1,6 @@
 [project]
 name = "nebra"
-version = "0.0.1"
+version = "0.1.0"
 description = "Stream or send time-critical scientific data live and for free on the ATProtocol."
 readme = "README.md"
 authors = [{ name = "emilyhunt", email = "emily.hunt.physics@gmail.com" }]
