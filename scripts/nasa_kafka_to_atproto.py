@@ -84,6 +84,6 @@ while True:
             print("Sending...")
             _remove_large_fields(value)
             _send_gcn_event(message, value)
-            _write_to_file(message, value)
+            # _write_to_file(message, value)
 
             print("Done!\n")
