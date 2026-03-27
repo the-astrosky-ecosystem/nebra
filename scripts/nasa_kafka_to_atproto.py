@@ -29,7 +29,7 @@ consumer.subscribe(
         "igwn.gwalert",
         "gcn.notices.superk.sn_alert",
         "gcn.notices.swift.bat.guano",
-        # "gcn.heartbeat",
+        "gcn.heartbeat",
     ]
 )
 
@@ -41,8 +41,9 @@ def _remove_large_fields(value):
         if "skymap" in value["event"]:
             value["event"].pop("skymap")
     if "external_coinc" in value:
-        if "combined_skymap" in value["external_coinc"]:
-            value["external_coinc"].pop("combined_skymap")
+        if value["external_coinc"] is not None:
+            if "combined_skymap" in value["external_coinc"]:
+                value["external_coinc"].pop("combined_skymap")
 
 
 def _send_gcn_event(message, value):
@@ -70,14 +71,18 @@ while True:
             print(message.error())
             continue
 
-        # Print the topic and message ID
-        print(f"New message! topic={message.topic()}, offset={message.offset()}")
-        value = json.loads(message.value())
+        if message.topic() == "gcn.heartbeat":
+            print(f"\rLast heartbeat: {get_atproto_utc_time()}", end="")
 
-        # Process it
-        print("Sending...")
-        _remove_large_fields(value)
-        _send_gcn_event(message, value)
-        _write_to_file(message, value)
+        else:
+            # Print the topic and message ID
+            print(f"\nNew message! topic={message.topic()}, offset={message.offset()}")
+            value = json.loads(message.value())
 
-        print("Done!")
+            # Process it
+            print("Sending...")
+            _remove_large_fields(value)
+            _send_gcn_event(message, value)
+            _write_to_file(message, value)
+
+            print("Done!\n")
