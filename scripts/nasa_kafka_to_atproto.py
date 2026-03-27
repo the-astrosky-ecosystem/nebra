@@ -38,8 +38,9 @@ def _remove_large_fields(value):
     if "healpix_file" in value:
         value.pop("healpix_file")
     if "event" in value:
-        if "skymap" in value["event"]:
-            value["event"].pop("skymap")
+        if value["event"] is not None:
+            if "skymap" in value["event"]:
+                value["event"].pop("skymap")
     if "external_coinc" in value:
         if value["external_coinc"] is not None:
             if "combined_skymap" in value["external_coinc"]:
