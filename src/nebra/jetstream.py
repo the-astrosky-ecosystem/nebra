@@ -25,7 +25,7 @@ from atproto_jetstream import JetstreamClient, SubscribeEventsMessage
     multiple=True,
     help="The DIDs to subscribe to. If not provided, subscribe to all.",
     type=str,
-    default=tuple(),
+    default=(),
 )
 @click.option(
     "--handle",
@@ -34,7 +34,7 @@ from atproto_jetstream import JetstreamClient, SubscribeEventsMessage
     multiple=True,
     help="The ATProto handles to subscribe to. If not provided, subscribe to all.",
     type=str,
-    default=tuple(),
+    default=(),
 )
 @click.option(
     "--cursor",
@@ -63,9 +63,9 @@ from atproto_jetstream import JetstreamClient, SubscribeEventsMessage
     default=True,
 )
 def stream(
-    collections: t.Sequence[str] = tuple(),
-    dids: t.Sequence[str] = tuple(),
-    handles: t.Sequence[str] = tuple(),
+    collections: t.Sequence[str] = (),
+    dids: t.Sequence[str] = (),
+    handles: t.Sequence[str] = (),
     cursor: int = 0,
     base_url: str | None = None,
     geo: t.Literal["us-west", "us-east"] = "us-west",
