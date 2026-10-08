@@ -112,13 +112,4 @@ if __name__ == "__main__":
     # Create the data source and client
     data_source = GCNDataSource(max_queue_size=1000)
     client = RebroadcastClient(data_source=data_source)
-
-    # Start the client and handle keyboard interrupt for clean shutdown
-    try:
-        client.start()
-        # Keep running until KeyboardInterrupt
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\nReceived keyboard interrupt, shutting down...")
-        client.stop()
+    client.start()

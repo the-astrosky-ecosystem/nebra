@@ -10,6 +10,7 @@ This module provides:
 
 import queue
 import threading
+import time
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -103,14 +104,11 @@ class RebroadcastClient:
         self.data_source_thread: threading.Thread | None = None
         self.consumer_thread: threading.Thread | None = None
 
-    def _send_event_with_retry(self, event: Dict[str, Any]) -> bool:
+    def _send_event_with_retry(self, event: dict[str, Any]):
         """Send an event with retry logic and exponential backoff.
 
         Args:
             event: The event to send.
-
-        Returns:
-            bool: True if the event was sent successfully, False otherwise.
         """
         retry_count = 0
         while retry_count <= self.max_retries and not self.stop_event.is_set():
@@ -151,8 +149,13 @@ class RebroadcastClient:
                 # Queue was empty, just continue the loop
                 continue
 
-    def start(self) -> None:
-        """Start the data source and consumer threads."""
+    def start(self, block: bool = True) -> None:
+        """Start the data source and consumer threads.
+
+        Args:
+            block: If True, this method will block until a keyboard interrupt is received
+                  and handle cleanup automatically. If False, the method will return immediately.
+        """
         if self.data_source_thread is not None or self.consumer_thread is not None:
             print("Client is already running")
             return
@@ -170,6 +173,15 @@ class RebroadcastClient:
         self.consumer_thread.start()
 
         print("Rebroadcast client started")
+
+        # If blocking, wait for keyboard interrupt
+        if block:
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                print("\nReceived keyboard interrupt, shutting down...")
+                self.stop()
 
     def stop(self) -> None:
         """Stop the data source and consumer threads."""
