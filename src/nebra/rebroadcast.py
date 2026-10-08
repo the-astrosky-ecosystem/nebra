@@ -56,8 +56,6 @@ class DataSource(ABC):
                 # Queue was empty after all, just put the event
                 self.event_queue.put_nowait(event)
                 return True
-        except Exception:
-            return False
 
     def stop(self) -> None:
         """Signal the data source to stop."""
@@ -82,6 +80,7 @@ class RebroadcastClient:
         data_source: DataSource,
         max_retries: int = 7,
         initial_retry_delay: float = 1.0,
+        send_function=send,
         **send_kwargs,
     ):
         """Initialize the RebroadcastClient.
@@ -90,8 +89,10 @@ class RebroadcastClient:
             data_source: A DataSource instance that provides events.
             max_retries: Maximum number of retry attempts for failed sends.
             initial_retry_delay: Initial delay in seconds for retry attempts (exponential backoff).
+            send_function: Function to use for sending events. Defaults to nebra.client.send.
             **send_kwargs: Additional keyword arguments to pass to the send function.
         """
+        self.send_function = send_function
         self.data_source = data_source
         self.max_retries = max_retries
         self.initial_retry_delay = initial_retry_delay
@@ -113,7 +114,7 @@ class RebroadcastClient:
         retry_count = 0
         while retry_count <= self.max_retries and not self.stop_event.is_set():
             try:
-                send(event, **self.send_kwargs)
+                self.send_function(event, **self.send_kwargs)
                 print(f"Successfully sent event: {event.get('eventID', 'unknown')}")
                 return
 
@@ -122,7 +123,7 @@ class RebroadcastClient:
                     print(
                         f"Max retries exceeded for event {event.get('eventID', 'unknown')}. Error: {e}"
                     )
-                    raise e
+                    raise
 
                 # Calculate delay with exponential backoff
                 delay = self.initial_retry_delay * (2**retry_count)
