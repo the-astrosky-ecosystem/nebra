@@ -5,21 +5,11 @@ atprotocol with robust error handling and automatic retries.
 import json
 import os
 import time
-from typing import Generator, Dict, Any
 
 from gcn_kafka import Consumer
 
 from nebra import get_atproto_utc_time
-from nebra.rebroadcast import RebroadcastClient
-
-client_id = os.getenv("GCN_CLIENT_ID", None)
-client_secret = os.getenv("GCN_CLIENT_SECRET", None)
-
-
-if client_id is None or client_secret is None:
-    raise ValueError(
-        "You must set the GCN_CLIENT_ID and GCN_CLIENT_SECRET env variables."
-    )
+from nebra.rebroadcast import DataSource, RebroadcastClient
 
 
 def _remove_large_fields(value):
@@ -36,68 +26,96 @@ def _remove_large_fields(value):
         value["external_coinc"].pop("combined_skymap")
 
 
-def gcn_event_generator() -> Generator[Dict[str, Any], None, None]:
-    """Generator function that yields GCN events from the Kafka stream."""
-    consumer = Consumer(client_id=client_id, client_secret=client_secret)
-    consumer.subscribe(
-        [
-            "gcn.circulars",
-            "gcn.notices.chime.frb",
-            "gcn.notices.dsa110.frb",
-            "gcn.notices.einstein_probe.wxt.alert",
-            "gcn.notices.icecube.lvk_nu_track_search",
-            "gcn.notices.icecube.gold_bronze_track_alerts",
-            "igwn.gwalert",
-            "gcn.notices.superk.sn_alert",
-            "gcn.notices.swift.bat.guano",
-            "gcn.heartbeat",
-        ]
-    )
-    
-    while True:
-        for message in consumer.consume(timeout=1):
-            if message.error():
-                print(f"Message error: {message.error()}")
+class GCNDataSource(DataSource):
+    """DataSource implementation for NASA GCN Kafka stream."""
+
+    def __init__(self, max_queue_size: int = 1000):
+        super().__init__(max_queue_size=max_queue_size)
+        self.client_id = os.getenv("GCN_CLIENT_ID", None)
+        self.client_secret = os.getenv("GCN_CLIENT_SECRET", None)
+
+        if self.client_id is None or self.client_secret is None:
+            raise ValueError(
+                "You must set the GCN_CLIENT_ID and GCN_CLIENT_SECRET env variables."
+            )
+
+    def get_consumer(self) -> Consumer:
+        """Create and configure a GCN Kafka consumer."""
+        consumer = Consumer(client_id=self.client_id, client_secret=self.client_secret)
+        consumer.subscribe(
+            [
+                "gcn.circulars",
+                "gcn.notices.chime.frb",
+                "gcn.notices.dsa110.frb",
+                "gcn.notices.einstein_probe.wxt.alert",
+                "gcn.notices.icecube.lvk_nu_track_search",
+                "gcn.notices.icecube.gold_bronze_track_alerts",
+                "igwn.gwalert",
+                "gcn.notices.superk.sn_alert",
+                "gcn.notices.swift.bat.guano",
+                "gcn.heartbeat",
+            ]
+        )
+        return consumer
+
+    def run(self) -> None:
+        """Run the event source, handling its own error recovery."""
+        consumer = self.get_consumer()
+
+        while not self.stop_event.is_set():
+            try:
+                for message in consumer.consume(timeout=1):
+                    if self.stop_event.is_set():
+                        break
+
+                    if message.error():
+                        print(f"Message error: {message.error()}")
+                        continue
+
+                    if message.topic() == "gcn.heartbeat":
+                        print(f"\rLast heartbeat: {get_atproto_utc_time()}", end="")
+                        continue
+
+                    # Fetch the message
+                    print(
+                        f"\nNew message! topic={message.topic()}, offset={message.offset()}"
+                    )
+                    value = json.loads(message.value())
+                    _remove_large_fields(value)
+
+                    # Create & add the event
+                    event = {
+                        "$type": "eco.astrosky.transient.gcn",
+                        "topic": message.topic(),
+                        "eventID": message.offset(),
+                        "data": json.dumps(value),
+                        "createdAt": get_atproto_utc_time(),
+                    }
+
+                    self.add_event(event)
+                    print("Added event to queue\n")
+
+            except Exception as e:
+                print(f"Error in GCN data source: {e}")
+                # Clean up the consumer so it gets recreated
+                consumer = self.get_consumer()
+                time.sleep(5)  # Wait before retrying
                 continue
-
-            if message.topic() == "gcn.heartbeat":
-                print(f"\rLast heartbeat: {get_atproto_utc_time()}", end="")
-                continue
-
-            # Print the topic and message ID
-            print(f"\nNew message! topic={message.topic()}, offset={message.offset()}")
-            value = json.loads(message.value())
-
-            # Process it
-            print("Processing...")
-            _remove_large_fields(value)
-            
-            # Create the event to yield
-            event = {
-                "$type": "eco.astrosky.transient.gcn",
-                "topic": message.topic(),
-                "eventID": message.offset(),
-                "data": json.dumps(value),
-                "createdAt": get_atproto_utc_time(),
-            }
-            
-            yield event
-            print("Yielded event for rebroadcast\n")
 
 
 if __name__ == "__main__":
-    # Start the rebroadcast client with our generator
+    # Start the rebroadcast client with our data source
     print("Starting NASA GCN Kafka to ATProto rebroadcast...")
-    
-    # Create and start the client
+
+    # Create the data source and client
+    data_source = GCNDataSource(max_queue_size=1000)
     client = RebroadcastClient(
-        generator_factory=gcn_event_generator,
+        data_source=data_source,
         max_retries=5,  # Maximum retry attempts for failed sends
         initial_retry_delay=1.0,  # Initial delay in seconds for retries
-        max_queue_size=1000,  # Maximum size of the event queue
-        reuse_session=True  # Pass through to the send function
+        reuse_session=True,  # Pass through to the send function
     )
-    
+
     # Start the client and handle keyboard interrupt for clean shutdown
     try:
         client.start()
