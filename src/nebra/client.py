@@ -7,6 +7,7 @@ and from the ATProto Python SDK's examples.
 import os
 
 from atproto import Client, Session, SessionEvent, models
+from atproto.exceptions import AtProtocolError
 
 
 def send(event: dict, reuse_session: bool = True):
@@ -52,8 +53,8 @@ def get_client(
         try:
             client.login(session_string=session)
             return client
-        except Exception as e:
-            logger.error(f"Unable to log in with previous session! Reason: {e}")
+        except AtProtocolError as e:
+            print(f"Unable to log in with previous session! Reason: {e}")
 
     # We revert to password login if we can't find a session or if there was an issue
     client.login(handle, password)
