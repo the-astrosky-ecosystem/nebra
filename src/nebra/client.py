@@ -9,6 +9,8 @@ import os
 from atproto import Client, Session, SessionEvent, models
 from atproto.exceptions import AtProtocolError
 
+from nebra.floats import encode_floats_in_event
+
 
 def send(event: dict, reuse_session: bool = True):
     handle, password, base_url = get_credentials()
@@ -16,9 +18,12 @@ def send(event: dict, reuse_session: bool = True):
         handle, password, base_url=base_url, reuse_session=reuse_session
     )
 
+    # Encode floating point numbers before sending
+    encoded_event = encode_floats_in_event(event)
+    
     client.com.atproto.repo.create_record(
         models.ComAtprotoRepoCreateRecord.Data(
-            collection=event["$type"], record=event, repo=handle#, validate=True
+            collection=encoded_event["$type"], record=encoded_event, repo=handle#, validate=True
         )
     )
 
