@@ -1,15 +1,7 @@
 # tests/test_jetstream.py
 
 import json
-import threading
 import time
-import typing as t
-from collections.abc import Callable
-from unittest.mock import Mock
-
-import pytest
-from atproto_client.models import NetworkBskyJetstreamSubscribeEvents
-from atproto_jetstream import JetstreamClient
 
 from nebra.jetstream import run_stream
 from tests.utilities import DummyJetstreamClient

@@ -6,7 +6,11 @@ from collections.abc import Callable
 import click
 from atproto import IdResolver
 from atproto_client.models import NetworkBskyJetstreamSubscribeEvents
-from atproto_jetstream import JetstreamClient, SubscribeEventsMessage
+from atproto_jetstream import (
+    JetstreamClient,
+    SubscribeEventsMessage,
+    parse_subscribe_events_message,
+)
 
 from nebra.floats import decode_floats_in_event
 
@@ -15,11 +19,12 @@ def run_stream(
     collections: t.Sequence[str] = (),
     dids: t.Sequence[str] = (),
     handles: t.Sequence[str] = (),
-    message_handler: Callable[[str], None] = print,
+    message_handler: Callable[[dict[str, t.Any]], None] = print,
     cursor: int = 0,
     base_url: str | None = None,
     geo: t.Literal["us-west", "us-east"] = "us-west",
     compress: bool = True,
+    kinds: t.Sequence[str] = ("commit",),
     client_factory: t.Callable[..., JetstreamClient] = JetstreamClient,
 ) -> None:
     """Run the stream with the given parameters.
@@ -33,9 +38,9 @@ def run_stream(
         base_url: The Jetstream URL to connect to.
         geo: The geography to use for public Jetstream.
         compress: Whether to enable compression.
+        kinds: The event kinds to subscribe to (e.g., "commit", "identity").
         client_factory: Factory function to create the Jetstream client.
     """
-    """Emit Jetstream JSON messages to the console, one per line."""
     print(f"Fetching DIDs for handles {handles}")
 
     # Resolve handles and form the final list of DIDs to subscribe to.
@@ -43,7 +48,7 @@ def run_stream(
     all_dids = [did for did in [*dids, *handle_dids] if did is not None]
 
     # Build the Jetstream params to subscribe with.
-    params: NetworkBskyJetstreamSubscribeEvents.ParamsDict = {}
+    params: NetworkBskyJetstreamSubscribeEvents.ParamsDict = {"kinds": list(kinds)}
     if collections:
         params["collections"] = list(collections)
     if all_dids:
@@ -138,6 +143,13 @@ _ID_RESOLVER = IdResolver()
     help="Enable Zstandard compression.",
     default=True,
 )
+@click.option(
+    "--kinds",
+    multiple=True,
+    help="The event kinds to subscribe to (e.g., 'commit', 'identity'). Defaults to 'commit'.",
+    type=str,
+    default=["commit"],
+)
 def stream(
     collections: t.Sequence[str] = (),
     dids: t.Sequence[str] = (),
@@ -146,6 +158,7 @@ def stream(
     base_url: str | None = None,
     geo: t.Literal["us-west", "us-east"] = "us-west",
     compress: bool = True,
+    kinds: t.Sequence[str] = ("commit",),
 ):
     """Emit Jetstream JSON messages to the console, one per line."""
     run_stream(
@@ -156,6 +169,7 @@ def stream(
         base_url=base_url,
         geo=geo,
         compress=compress,
+        kinds=kinds,
     )
 
 

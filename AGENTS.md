@@ -16,7 +16,7 @@ This project uses `uv` for Python dependency management and task execution. All 
 
 1. **Run Ruff to check and fix code style issues:**
    ```bash
-   uv run ruff check --fix
+   ruff check --fix
    ```
    
    This will automatically fix many common code style issues. Ruff is configured in `pyproject.toml`.
@@ -42,7 +42,7 @@ This project uses `uv` for Python dependency management and task execution. All 
 
 - **Run Ruff in check-only mode (without fixing):**
   ```bash
-  uv run ruff check
+  ruff check
   ```
 
 ## Testing Guidelines
@@ -71,7 +71,7 @@ This project uses `uv` for Python dependency management and task execution. All 
 1. Understand the task requirements.
 2. Review relevant code in the codebase.
 3. Make changes to implement the task.
-4. Run `uv run ruff check --fix` to ensure code style compliance.
+4. Run `ruff check --fix` to ensure code style compliance.
 5. Add or update tests as needed.
 6. Run `pytest` to verify all tests pass.
 7. Document any changes or new functionality in the final message.

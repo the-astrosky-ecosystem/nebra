@@ -29,7 +29,7 @@ nebra can stream any type of record in real-time. This uses [jetstream](https://
 After installing nebra into your virtual environment, you can check out its data streaming with a command like
 
 ```bash
-python -m nebra stream --collection=eco.astrosky.transient.* --handle=transient-xposter.astrosky.eco
+nebra stream --collection=eco.astrosky.transient.* --handle=transient-xposter.astrosky.eco
 ```
 
 which will output all transient-type records maintained by [The Astrosky Ecosystem](https://astrosky.eco/) and posted by our transient crossposting account, `transient-xposter.astrosky.eco`, to your console. You can view the kinds of records this will stream with a tool like [pdsls](https://pdsls.dev/at://did:plc:2o4hrvrj5vsicfuqlxhtk6qy).
