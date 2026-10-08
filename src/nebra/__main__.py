@@ -1,6 +1,6 @@
-from .jetstream import stream
-from .client import send
 import click
+
+from .jetstream import stream
 
 
 @click.group()

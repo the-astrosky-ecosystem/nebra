@@ -5,6 +5,7 @@ and from the ATProto Python SDK's examples.
 """
 
 import os
+
 from atproto import Client, Session, SessionEvent, models
 
 
@@ -74,7 +75,7 @@ class BotSessionUpdater:
 
     def on_session_change(self, event: SessionEvent, session: Session) -> None:
         """Callback to save session."""
-        print(f"Session changed: {repr(event)}, {repr(session)}")
+        print(f"Session changed: {event!r}, {session!r}")
         if event in (SessionEvent.CREATE, SessionEvent.REFRESH):
             self.save_session(session.export())
 

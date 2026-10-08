@@ -2,11 +2,12 @@
 atprotocol.
 """
 
-import os
 import json
-from gcn_kafka import Consumer
-from nebra import send, get_atproto_utc_time
+import os
 
+from gcn_kafka import Consumer
+
+from nebra import get_atproto_utc_time, send
 
 client_id = os.getenv("GCN_CLIENT_ID", None)
 client_secret = os.getenv("GCN_CLIENT_SECRET", None)

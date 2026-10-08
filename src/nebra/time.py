@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def get_atproto_utc_time():
@@ -6,4 +6,4 @@ def get_atproto_utc_time():
     
     See https://atproto.com/specs/lexicon#datetime
     """
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
