@@ -8,6 +8,7 @@ requires-python = ">=3.11"
 dependencies = [
     "atproto>=0.0.72",
     "click>=8.3.1",
+    "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]
 
