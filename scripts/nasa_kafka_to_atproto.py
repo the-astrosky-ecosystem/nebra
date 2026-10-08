@@ -64,43 +64,45 @@ class GCNDataSource(DataSource):
 
         while not self.stop_event.is_set():
             try:
-                for message in consumer.consume(timeout=1):
-                    if self.stop_event.is_set():
-                        break
+                messages = consumer.consume(timeout=1)
 
-                    if message.error():
-                        print(f"Message error: {message.error()}")
-                        continue
-
-                    if message.topic() == "gcn.heartbeat":
-                        print(f"\rLast heartbeat: {get_atproto_utc_time()}", end="")
-                        continue
-
-                    # Fetch the message
-                    print(
-                        f"\nNew message! topic={message.topic()}, offset={message.offset()}"
-                    )
-                    value = json.loads(message.value())
-                    _remove_large_fields(value)
-
-                    # Create & add the event
-                    event = {
-                        "$type": "eco.astrosky.transient.gcn",
-                        "topic": message.topic(),
-                        "eventID": message.offset(),
-                        "data": json.dumps(value),
-                        "createdAt": get_atproto_utc_time(),
-                    }
-
-                    self.add_event(event)
-                    print("Added event to queue\n")
-
-            except Exception as e:
+            except Exception as e:  # noqa
                 print(f"Error in GCN data source: {e}")
-                # Clean up the consumer so it gets recreated
+
+                # Wait before retrying
+                time.sleep(5)
+
+                # Reset consumer
                 consumer = self.get_consumer()
-                time.sleep(5)  # Wait before retrying
                 continue
+
+            for message in messages:
+                if message.error():
+                    print(f"Message error: {message.error()}")
+                    continue
+
+                if message.topic() == "gcn.heartbeat":
+                    print(f"\rLast heartbeat: {get_atproto_utc_time()}", end="")
+                    continue
+
+                # Fetch the message
+                print(
+                    f"\nNew message! topic={message.topic()}, offset={message.offset()}"
+                )
+                value = json.loads(message.value())
+                _remove_large_fields(value)
+
+                # Create & add the event
+                event = {
+                    "$type": "eco.astrosky.transient.gcn",
+                    "topic": message.topic(),
+                    "eventID": message.offset(),
+                    "data": json.dumps(value),
+                    "createdAt": get_atproto_utc_time(),
+                }
+
+                self.add_event(event)
+                print("Added event to queue\n")
 
 
 if __name__ == "__main__":
@@ -109,12 +111,7 @@ if __name__ == "__main__":
 
     # Create the data source and client
     data_source = GCNDataSource(max_queue_size=1000)
-    client = RebroadcastClient(
-        data_source=data_source,
-        max_retries=5,  # Maximum retry attempts for failed sends
-        initial_retry_delay=1.0,  # Initial delay in seconds for retries
-        reuse_session=True,  # Pass through to the send function
-    )
+    client = RebroadcastClient(data_source=data_source)
 
     # Start the client and handle keyboard interrupt for clean shutdown
     try:

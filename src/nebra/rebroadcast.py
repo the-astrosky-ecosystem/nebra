@@ -183,11 +183,11 @@ class RebroadcastClient:
 
         # Wait for threads to finish
         if self.data_source_thread is not None:
-            self.data_source_thread.join(timeout=5)
+            self.data_source_thread.join(timeout=30)
             self.data_source_thread = None
 
         if self.consumer_thread is not None:
-            self.consumer_thread.join(timeout=5)
+            self.consumer_thread.join(timeout=30)
             self.consumer_thread = None
 
         print("Rebroadcast client stopped")
