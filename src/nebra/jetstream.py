@@ -19,7 +19,7 @@ def _run_stream(
     collections: t.Sequence[str] = (),
     dids: t.Sequence[str] = (),
     handles: t.Sequence[str] = (),
-    message_handler: Callable[[str], None] = print,
+    message_handler: Callable = print,
     cursor: int = 0,
     base_url: str | None = None,
     geo: t.Literal["us-west", "us-east"] = "us-west",
@@ -88,111 +88,26 @@ def _run_stream(
         # Parse the JSON message before decoding: decode_floats_in_event can't
         # reach encoded floats inside a raw JSON string, only inside a dict/list.
         decoded = decode_floats_in_event(message.model_dump(mode="json"))
-        message_handler(json.dumps(decoded))
+        message_handler(decoded)
 
     client.start(on_message)
 
 
-PUBLIC_URI_FMT = "wss://jetstream.{geo}.bsky.network/xrpc"
-
-
-def get_public_jetstream_base_uri(
-    geo: t.Literal["us-west", "us-east"] = "us-east",
-) -> str:
-    """Get a public Jetstream base URI for the specified geography.
-    
-    Parameters
-    ----------
-    geo : {"us-west", "us-east"}, optional
-        The geography to use for the public Jetstream service. Defaults to "us-east".
-        
-    Returns
-    -------
-    str
-        The base URI for the specified geography.
-    """
-    return PUBLIC_URI_FMT.format(geo=geo)
-
-
-# Pre-cached ID resolver
-_ID_RESOLVER = IdResolver()
-
-
-@click.command()
-@click.option(
-    "--collection",
-    "-c",
-    "collections",
-    multiple=True,
-    help="The collections to subscribe to. If not provided, subscribe to all.",
-    type=str,
-    default=("eco.astrosky.transient.*",),
-)
-@click.option(
-    "--did",
-    "-d",
-    "dids",
-    multiple=True,
-    help="The DIDs to subscribe to. If not provided, subscribe to all.",
-    type=str,
-    default=(),
-)
-@click.option(
-    "--handle",
-    "-h",
-    "handles",
-    multiple=True,
-    help="The ATProto handles to subscribe to. If not provided, subscribe to all.",
-    type=str,
-    default=(),
-)
-@click.option(
-    "--cursor",
-    "-u",
-    help="The cursor to start from. If not provided or set to zero, start from 'now'. Note that the cursor can only go as far back as the Jetstream instance has indexed.",
-    type=int,
-    default=0,
-)
-@click.option(
-    "--url",
-    "base_url",
-    help="The Jetstream URL to connect to.",
-    type=str,
-)
-@click.option(
-    "--geo",
-    "-g",
-    help="If using a Bluesky PBC Jetstream instance, choose which public Jetstream service geography to connect to.",
-    type=click.Choice(["us-west", "us-east"]),
-    default="us-east",
-)
-@click.option(
-    "--compress",
-    is_flag=True,
-    help="Enable Zstandard compression.",
-    default=True,
-)
-@click.option(
-    "--kinds",
-    multiple=True,
-    help="The event kinds to subscribe to (e.g., 'commit', 'identity'). Defaults to 'commit'.",
-    type=str,
-    default=["commit"],
-)
 def stream(
     collections: t.Sequence[str] = (),
     dids: t.Sequence[str] = (),
     handles: t.Sequence[str] = (),
+    message_handler: Callable = print,
     cursor: int = 0,
     base_url: str | None = None,
     geo: t.Literal["us-west", "us-east"] = "us-west",
     compress: bool = True,
     kinds: t.Sequence[str] = ("commit",),
-):
-    """Command-line interface for streaming Jetstream messages.
+) -> None:
+    """Programmatic interface for streaming Jetstream messages.
     
-    This function is a Click command that streams Jetstream messages to the console.
-    It accepts various options to filter the stream by collection, DID, handle, etc.
+    This function streams Jetstream messages and passes them to the provided
+    `message_handler`. It can be called directly from Python code.
     
     Parameters
     ----------
@@ -202,6 +117,8 @@ def stream(
         The DIDs to subscribe to. Defaults to empty tuple.
     handles : Sequence[str], optional
         The ATProto handles to subscribe to. Defaults to empty tuple.
+    message_handler : Callable[[str], None], optional
+        Function to handle incoming messages. Defaults to print.
     cursor : int, optional
         The cursor to start from. Defaults to 0.
     base_url : str, optional
@@ -217,12 +134,117 @@ def stream(
         collections=collections,
         dids=dids,
         handles=handles,
+        message_handler=message_handler,
         cursor=cursor,
         base_url=base_url,
         geo=geo,
         compress=compress,
         kinds=kinds,
     )
+
+
+# Define the options as a list of dictionaries
+options = [
+    {
+        "args": ["--collections", "-c"],
+        "kwargs": {
+            "multiple": True,
+            "help": "The collections to subscribe to. If not provided, subscribe to all.",
+            "type": str,
+            "default": ("eco.astrosky.transient.*",),
+        },
+    },
+    {
+        "args": ["--dids", "-d"],
+        "kwargs": {
+            "multiple": True,
+            "help": "The DIDs to subscribe to. If not provided, subscribe to all.",
+            "type": str,
+            "default": (),
+        },
+    },
+    {
+        "args": ["--handles", "-h"],
+        "kwargs": {
+            "multiple": True,
+            "help": "The ATProto handles to subscribe to. If not provided, subscribe to all.",
+            "type": str,
+            "default": (),
+        },
+    },
+    {
+        "args": ["--cursor", "-u"],
+        "kwargs": {
+            "help": "The cursor to start from. If not provided or set to zero, start from 'now'. Note that the cursor can only go as far back as the Jetstream instance has indexed.",
+            "type": int,
+            "default": 0,
+        },
+    },
+    {
+        "args": ["--base-url"],
+        "kwargs": {
+            "help": "The Jetstream URL to connect to.",
+            "type": str,
+        },
+    },
+    {
+        "args": ["--geo", "-g"],
+        "kwargs": {
+            "help": "If using a Bluesky PBC Jetstream instance, choose which public Jetstream service geography to connect to.",
+            "type": click.Choice(["us-west", "us-east"]),
+            "default": "us-east",
+        },
+    },
+    {
+        "args": ["--compress"],
+        "kwargs": {
+            "is_flag": True,
+            "help": "Enable Zstandard compression.",
+            "default": True,
+        },
+    },
+    {
+        "args": ["--kinds"],
+        "kwargs": {
+            "multiple": True,
+            "help": "The event kinds to subscribe to (e.g., 'commit', 'identity'). Defaults to 'commit'.",
+            "type": str,
+            "default": ["commit"],
+        },
+    },
+]
+
+# Define the base command
+stream_command = click.command(name="stream")(stream)
+
+# Apply the options in a loop
+for option in options:
+    stream_command = click.option(*option["args"], **option["kwargs"])(stream_command)
+
+
+PUBLIC_URI_FMT = "wss://jetstream.{geo}.bsky.network/xrpc"
+
+
+def get_public_jetstream_base_uri(
+    geo: t.Literal["us-west", "us-east"] = "us-east",
+) -> str:
+    """Get a public Jetstream base URI for the specified geography.
+    
+    Parameters
+    ----------
+    geo : {"us-west", "us-east"}, optional
+        The geography to use for the public Jetstream service. Defaults to us-east.
+        
+    Returns
+    -------
+    str
+        The base URI for the specified geography.
+    """
+    return PUBLIC_URI_FMT.format(geo=geo)
+
+
+# Pre-cached ID resolver
+_ID_RESOLVER = IdResolver()
 
 
 def resolve_handle_to_did(handle: str) -> str | None:

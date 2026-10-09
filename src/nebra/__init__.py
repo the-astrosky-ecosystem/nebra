@@ -2,7 +2,7 @@ import click
 
 from .broadcast import DataSource, rebroadcast
 from .client import send
-from .jetstream import stream
+from .jetstream import stream, stream_command
 from .time import get_atproto_utc_time
 
 __all__ = ["DataSource", "get_atproto_utc_time", "rebroadcast", "send", "stream"]
@@ -14,7 +14,7 @@ def cli():
 
 
 # Add the `stream` command to the CLI group
-cli.add_command(stream)
+cli.add_command(stream_command)
 
 
 def main():

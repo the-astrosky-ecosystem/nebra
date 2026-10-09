@@ -30,6 +30,29 @@ class DataSource(ABC):
         A thread-safe queue for storing events.
     stop_event : threading.Event
         An event to signal when the data source should stop.
+
+    Examples
+    --------
+    The following implementation of a DataSource would periodically create new Bluesky
+    posts.
+
+    ```python
+    import time
+    import nebra
+
+    class PostDataSource(nebra.DataSource):
+        def run(self):
+            counter = 1
+            while not self.stop_event.is_set():
+                new_post = {
+                    "$type": "app.bsky.feed.post",
+                    "text": f"This is test post {counter}.",
+                    "createdAt": nebra.get_atproto_utc_time()
+                }
+                self.add_event(new_post)
+                counter += 1
+                time.sleep(1)
+    ```
     """
 
     def __init__(self, max_queue_size: int = 1000):
@@ -91,24 +114,6 @@ class DataSource(ABC):
         Notes
         -----
         This is an abstract method that must be implemented by subclasses.
-
-        Examples
-        --------
-
-        The following implementation of run() would periodically send new Bluesky posts:
-
-        >>> import time
-        ... from nebra.time import get_atproto_utc_time
-        ...
-        ... def run(self):
-        ...     while not self.stop_event.is_set():
-        ...         new_post = {
-        ...             "$type": "app.bsky.feed.post",
-        ...             "text": "This is a test post.",
-        ...             "createdAt": get_atproto_utc_time()
-        ...         }
-        ...         self.add_event(new_post)
-        ...         time.sleep(1)
         """
 
 

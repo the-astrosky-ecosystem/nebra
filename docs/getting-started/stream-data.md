@@ -52,13 +52,13 @@ Check out the full API (see tabs above) for more infromation.
 Streaming data with `nebra` is easy to play around with using the CLI interface. In CLI mode, each record is output on a single line as a JSON object. For instance: this command will stream **all records being created on Bluesky, live** (often 500+/second). Try running it for a few seconds and look at the output:
 
 ```bash
-nebra stream --collection=app.bsky.feed.*
+nebra stream --collections=app.bsky.feed.*
 ```
 
 or, we could try streaming all matadisco records on the network (usually a few per 10 minutes):
 
 ```bash
-nebra stream --collection=app.bsky.*
+nebra stream --collections=app.bsky.*
 ```
 
 You can see a full list of options with
@@ -70,7 +70,7 @@ nebra stream --help
 Common options are to filter records by account, such as by their AT Protocol handle / unique identifier (DID). These options can be a comma-separated list of account handles:
 
 ```bash
-nebra stream --handle=emily.space,astrosky.eco
+nebra stream --handles=emily.space,astrosky.eco
 ```
 
 
