@@ -8,8 +8,8 @@ from typing import Any
 from atproto_client.models import NetworkBskyJetstreamSubscribeEvents
 from atproto_jetstream import SubscribeEventsMessage
 
+from nebra.broadcast import DataSource
 from nebra.floats import encode_floats_in_event
-from nebra.rebroadcast import DataSource
 
 
 class DummyDataSource(DataSource):

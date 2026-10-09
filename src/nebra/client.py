@@ -13,7 +13,10 @@ from nebra.floats import encode_floats_in_event
 
 
 def send(event: dict, reuse_session: bool = True):
-    """Send an event to the AT Protocol.
+    """Send an event to the AT Protocol. The NEBRA_HANDLE and NEBRA_PASSWORD environment
+    variables must be set to the handle and app password of your AT Protocol account. In
+    addition, NEBRA_BASE_URL should be set to the base URL of your AT Protocol PDS if
+    you are not on a Bluesky PDS (e.g., https://eurosky.social).
 
     Parameters
     ----------
@@ -21,11 +24,6 @@ def send(event: dict, reuse_session: bool = True):
         The event to send, which must include a "$type" field.
     reuse_session : bool, optional
         Whether to reuse an existing session if available. Defaults to True.
-
-    Returns
-    -------
-    None
-        This function does not return a value.
     """
     handle, password, base_url = get_credentials()
     client = get_client(

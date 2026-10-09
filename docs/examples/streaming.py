@@ -15,7 +15,7 @@ import typing as t
 
 import click
 
-from nebra.jetstream import run_stream
+from nebra.jetstream import _run_stream
 
 
 def handle_message(message: str) -> None:
@@ -77,7 +77,7 @@ def stream(collections: t.Sequence[str], handles: t.Sequence[str], cursor: int, 
         print(f"Stream will run for {duration} seconds.")
         
         def run_with_timeout():
-            run_stream(
+            _run_stream(
                 collections=collections,
                 handles=handles,
                 cursor=cursor,
@@ -94,7 +94,7 @@ def stream(collections: t.Sequence[str], handles: t.Sequence[str], cursor: int, 
         print(f"Stream stopped after {duration} seconds.")
     else:
         print("Stream will run indefinitely. Press Ctrl+C to stop.")
-        run_stream(
+        _run_stream(
             collections=collections,
             handles=handles,
             cursor=cursor,

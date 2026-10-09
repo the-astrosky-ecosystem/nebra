@@ -15,7 +15,7 @@ from atproto_jetstream import (
 from nebra.floats import decode_floats_in_event
 
 
-def run_stream(
+def _run_stream(
     collections: t.Sequence[str] = (),
     dids: t.Sequence[str] = (),
     handles: t.Sequence[str] = (),
@@ -179,7 +179,6 @@ _ID_RESOLVER = IdResolver()
     type=str,
     default=["commit"],
 )
-@click.command()
 def stream(
     collections: t.Sequence[str] = (),
     dids: t.Sequence[str] = (),
@@ -214,7 +213,7 @@ def stream(
     kinds : Sequence[str], optional
         The kinds of events to subscribe to. Defaults to ("commit",).
     """
-    run_stream(
+    _run_stream(
         collections=collections,
         dids=dids,
         handles=handles,

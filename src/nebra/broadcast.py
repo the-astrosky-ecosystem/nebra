@@ -3,6 +3,7 @@
 This module provides:
 - A DataSource abstract base class for implementing event sources
 - A RebroadcastClient class that processes events from a DataSource and sends them to ATProto
+- A simple rebroadcast() function for quick setup
 - Thread-safe queue for communication between event producers and consumers
 - Automatic retries for failed sends with exponential backoff
 - Clean startup and shutdown
@@ -90,6 +91,24 @@ class DataSource(ABC):
         Notes
         -----
         This is an abstract method that must be implemented by subclasses.
+
+        Examples
+        --------
+
+        The following implementation of run() would periodically send new Bluesky posts:
+
+        >>> import time
+        ... from nebra.time import get_atproto_utc_time
+        ...
+        ... def run(self):
+        ...     while not self.stop_event.is_set():
+        ...         new_post = {
+        ...             "$type": "app.bsky.feed.post",
+        ...             "text": "This is a test post.",
+        ...             "createdAt": get_atproto_utc_time()
+        ...         }
+        ...         self.add_event(new_post)
+        ...         time.sleep(1)
         """
 
 
@@ -275,3 +294,41 @@ class RebroadcastClient:
             self.consumer_thread = None
 
         print("Rebroadcast client stopped")
+
+
+def rebroadcast(
+    data_source: DataSource,
+    max_retries: int = 7,
+    initial_retry_delay: float = 1.0,
+    send_function=send,
+    **send_kwargs,
+):
+    """Rebroadcast events from a compatible DataSource object onto the AT Protocol.
+    Includes threading for speed, robust error handling that automatically reboots
+    clients that crash, a Queue system to deal with busy networks or rate limited PDSs,
+    and more!
+
+    This function is the recommended way to rebroadcast events onto the AT Protocol from
+    an existing source in a robust way.
+
+    Parameters
+    ----------
+    data_source : DataSource
+        A DataSource instance that provides events to rebroadcast.
+    max_retries : int, optional
+        Maximum number of retry attempts for failed sends. Defaults to 7.
+    initial_retry_delay : float, optional
+        Initial delay in seconds for retry attempts (exponential backoff). Defaults to 1.0.
+    send_function : Callable, optional
+        Function to use for sending events. Defaults to nebra.client.send.
+    **send_kwargs : dict
+        Additional keyword arguments to pass to the send function.
+    """
+    client = RebroadcastClient(
+        data_source=data_source,
+        max_retries=max_retries,
+        initial_retry_delay=initial_retry_delay,
+        send_function=send_function,
+        **send_kwargs,
+    )
+    client.start()

@@ -30,14 +30,14 @@ def test_stream_help(runner):
 def test_stream_command(runner):
     """Test that the `stream` command runs without errors."""
     # Mock the `run_stream` function to avoid making real API calls during tests
-    from nebra.jetstream import run_stream
-    original_run_stream = run_stream
+    from nebra.jetstream import _run_stream
+    original_run_stream = _run_stream
 
     def mock_run_stream(*args, **kwargs):
         print("Mock stream called")
 
     import nebra.jetstream
-    nebra.jetstream.run_stream = mock_run_stream
+    nebra.jetstream._run_stream = mock_run_stream
 
     try:
         result = runner.invoke(cli, ["stream"])
@@ -45,7 +45,7 @@ def test_stream_command(runner):
         assert "Mock stream called" in result.output
     finally:
         # Restore the original function
-        nebra.jetstream.run_stream = original_run_stream
+        nebra.jetstream._run_stream = original_run_stream
 
 
 def test_stream_command_with_invalid_args(runner):
@@ -57,39 +57,39 @@ def test_stream_command_with_invalid_args(runner):
 
 def test_stream_command_with_default_kinds(runner):
     """Test that the `stream` command defaults to 'commit' kind."""
-    from nebra.jetstream import run_stream
-    original_run_stream = run_stream
+    from nebra.jetstream import _run_stream
+    original_run_stream = _run_stream
 
     def mock_run_stream(*args, **kwargs):
         assert kwargs.get("kinds", ("commit",)) == ("commit",)
         print("Mock stream called with kinds=['commit']")
 
     import nebra.jetstream
-    nebra.jetstream.run_stream = mock_run_stream
+    nebra.jetstream._run_stream = mock_run_stream
 
     try:
         result = runner.invoke(cli, ["stream"])
         assert result.exit_code == 0
         assert "Mock stream called with kinds=['commit']" in result.output
     finally:
-        nebra.jetstream.run_stream = original_run_stream
+        nebra.jetstream._run_stream = original_run_stream
 
 
 def test_stream_command_with_custom_kinds(runner):
     """Test that the `stream` command can accept custom kinds."""
-    from nebra.jetstream import run_stream
-    original_run_stream = run_stream
+    from nebra.jetstream import _run_stream
+    original_run_stream = _run_stream
 
     def mock_run_stream(*args, **kwargs):
         assert kwargs.get("kinds", ()) == ("commit", "identity")
         print("Mock stream called with kinds=['commit', 'identity']")
 
     import nebra.jetstream
-    nebra.jetstream.run_stream = mock_run_stream
+    nebra.jetstream._run_stream = mock_run_stream
 
     try:
         result = runner.invoke(cli, ["stream", "--kinds", "commit", "--kinds", "identity"])
         assert result.exit_code == 0
         assert "Mock stream called with kinds=['commit', 'identity']" in result.output
     finally:
-        nebra.jetstream.run_stream = original_run_stream
+        nebra.jetstream._run_stream = original_run_stream

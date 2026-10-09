@@ -3,7 +3,7 @@
 import json
 import time
 
-from nebra.jetstream import run_stream
+from nebra.jetstream import _run_stream
 from tests.utilities import DummyJetstreamClient
 
 
@@ -18,7 +18,7 @@ def test_stream_with_dummy_client():
     dummy_client = DummyJetstreamClient(event_count=3, event_delay=0.05)
     
     # Run the stream function with our dummy client
-    run_stream(
+    _run_stream(
         collections=["com.example.test"],
         message_handler=mock_handler,
         client_factory=lambda **kwargs: dummy_client
@@ -53,7 +53,7 @@ def test_stream_float_decoding():
     dummy_client = DummyJetstreamClient(event_count=2, event_delay=0.05)
     
     # Run the stream function with our dummy client
-    run_stream(
+    _run_stream(
         collections=["com.example.test"],
         message_handler=mock_handler,
         client_factory=lambda **kwargs: dummy_client

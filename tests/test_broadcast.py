@@ -4,7 +4,7 @@ import threading
 import time
 from unittest.mock import patch
 
-from nebra.rebroadcast import DataSource, RebroadcastClient
+from nebra.broadcast import DataSource, RebroadcastClient
 
 from .utilities import DummyDataSource, dummy_send
 
@@ -74,7 +74,7 @@ def test_rebroadcast_client_start_stop():
 def test_rebroadcast_client_event_processing():
     """Test that RebroadcastClient processes events correctly."""
     # Create a mock to track calls to dummy_send
-    mock_send = patch('tests.test_rebroadcast.dummy_send', wraps=lambda event, **kwargs: dummy_send(event, **kwargs)).start()
+    mock_send = patch('tests.test_broadcast.dummy_send', wraps=lambda event, **kwargs: dummy_send(event, **kwargs)).start()
     
     data_source = DummyDataSource(max_queue_size=5, event_delay=0.1)
     client = RebroadcastClient(data_source, send_function=mock_send, max_retries=3)
@@ -114,7 +114,7 @@ def test_rebroadcast_client_retry_logic():
             raise ValueError("Simulated send failure")
         return dummy_send(event, **kwargs)
     
-    mock_send = patch('tests.test_rebroadcast.dummy_send', side_effect=mock_send_with_failures).start()
+    mock_send = patch('tests.test_broadcast.dummy_send', side_effect=mock_send_with_failures).start()
     
     data_source = DummyDataSource(max_queue_size=1, event_delay=0.1)
     client = RebroadcastClient(data_source, send_function=mock_send, max_retries=3, initial_retry_delay=0.1)
@@ -135,6 +135,10 @@ def test_rebroadcast_client_retry_logic():
     patch.stopall()
 
 
+import pytest
+
+
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
 def test_rebroadcast_client_max_retries():
     """Test that RebroadcastClient respects max_retries."""
     # Create a mock to track calls
@@ -144,7 +148,7 @@ def test_rebroadcast_client_max_retries():
         call_count += 1
         raise ValueError("Simulated send failure")
     
-    mock_send = patch('tests.test_rebroadcast.dummy_send', side_effect=mock_send_always_fails).start()
+    mock_send = patch('tests.test_broadcast.dummy_send', side_effect=mock_send_always_fails).start()
     
     # Calculate the total time needed for all retries
     # initial_retry_delay * (2^0 + 2^1 + 2^2) = 0.1 + 0.2 + 0.4 = 0.7s
@@ -158,14 +162,18 @@ def test_rebroadcast_client_max_retries():
     
     # Let it run long enough for all retries to complete
     time.sleep(total_retry_time + 0.2)  # Add a small buffer
-    
-    # Stop the client
+
+    # Stop the client and ensure all threads are cleaned up
     client.stop()
-    
+    if client.consumer_thread is not None:
+        client.consumer_thread.join(timeout=1.0)
+    if client.data_source_thread is not None:
+        client.data_source_thread.join(timeout=1.0)
+
     # Check that the mock was called max_retries + 1 times (initial attempt + retries)
     # We might get fewer calls if the test stops too early, but we should get at least max_retries
     assert call_count >= 3  # At least 3 retries (initial attempt + 2 retries)
-    
+
     # Clean up
     patch.stopall()
 
@@ -177,9 +185,8 @@ def test_rebroadcast_client_queue_full():
     
     def mock_send_slow(event, **kwargs):
         processing_event.wait()  # Block until released
-        return dummy_send(event, **kwargs)
     
-    mock_send = patch('tests.test_rebroadcast.dummy_send', side_effect=mock_send_slow).start()
+    mock_send = patch('tests.test_broadcast.dummy_send', side_effect=mock_send_slow).start()
     
     # Create a data source with a small queue and fast event generation
     data_source = DummyDataSource(max_queue_size=3, event_delay=0.05)
