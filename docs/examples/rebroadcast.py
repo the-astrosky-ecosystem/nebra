@@ -5,7 +5,7 @@ Rebroadcasting data with nebra
 This script demonstrates how to rebroadcast data from an event source onto the AT Protocol using nebra.
 
 Prerequisites:
-- Set the NEBRA_HANDLE environment variable to your AT Proto handle (e.g., "your-handle.bsky.social").
+- Set the NEBRA_HANDLE environment variable to your AT Protocol handle (e.g., "your-handle.bsky.social").
 - Set the NEBRA_PASSWORD environment variable to your app password.
 """
 

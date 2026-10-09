@@ -30,9 +30,10 @@ By default, `nebra.stream` just writes events to the console. Instead, we can wr
 
 ```python
 def filter_gravitational_waves(event: dict):
-    if event.get("topic", "n/a") == "igwn.gwalert":
+    record = event.record
+    if record.get("topic", "n/a") == "igwn.gwalert":
         print("A gravitational wave just happened!")
-        do_some_cool_science(event)
+        do_some_cool_science(record)
     else:
         print("Event has wrong topic.")
 
@@ -44,7 +45,7 @@ nebra.stream(
 )
 ```
 
-Check out the full API (see tabs above) for more infromation.
+Check out [the full API](../api/stream.md) for more information.
 
 
 ## On the command line (CLI)
