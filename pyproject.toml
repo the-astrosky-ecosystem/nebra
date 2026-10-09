@@ -19,6 +19,11 @@ nebra = "nebra:main"
 subscriptions = [
     "gcn-kafka>=0.3.4",
 ]
+docs = [
+    "mkdocs-material[imaging]>=9.5.0",
+    "mkdocs-jupyter>=0.24.0",
+    "mkdocstrings-python>=1.7.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.10.7,<0.11.0"]

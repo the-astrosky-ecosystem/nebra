@@ -1,5 +1,6 @@
 """Client to connect to a jetstream instance and stream ATProto events."""
 
+import json
 import typing as t
 from collections.abc import Callable
 
@@ -9,7 +10,6 @@ from atproto_client.models import NetworkBskyJetstreamSubscribeEvents
 from atproto_jetstream import (
     JetstreamClient,
     SubscribeEventsMessage,
-    parse_subscribe_events_message,
 )
 
 from nebra.floats import decode_floats_in_event
@@ -19,7 +19,7 @@ def run_stream(
     collections: t.Sequence[str] = (),
     dids: t.Sequence[str] = (),
     handles: t.Sequence[str] = (),
-    message_handler: Callable[[dict[str, t.Any]], None] = print,
+    message_handler: Callable[[str], None] = print,
     cursor: int = 0,
     base_url: str | None = None,
     geo: t.Literal["us-west", "us-east"] = "us-west",
@@ -69,8 +69,10 @@ def run_stream(
     )
 
     def on_message(message: SubscribeEventsMessage) -> None:
-        record = decode_floats_in_event(message.model_dump_json())
-        message_handler(record)
+        # Parse the JSON message before decoding: decode_floats_in_event can't
+        # reach encoded floats inside a raw JSON string, only inside a dict/list.
+        decoded = decode_floats_in_event(message.model_dump(mode="json"))
+        message_handler(json.dumps(decoded))
 
     client.start(on_message)
 
