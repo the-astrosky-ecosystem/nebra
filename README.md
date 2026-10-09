@@ -1,4 +1,5 @@
 [![PyPI](https://img.shields.io/badge/PyPI-package-blue.svg)](https://pypi.org/project/nebra/)
+[![PyPI](https://img.shields.io/badge/Docs-online-green.svg)](https://nebra.astrosky.eco/)
 
 
 # nebra
@@ -8,7 +9,7 @@ Stream or send time-critical scientific data live and for free on the ATProtocol
 > [!WARNING]  
 > This package is in early development, and may have breaking changes in the near future. We do not (yet) recommend using it for production science.
 
-Below is a minimal readme for the basic features of the package; more docs to come later!
+Below is a minimal readme for the basic features of the package; you can find more [on the package documentation](https://nebra.astrosky.eco/).
 
 ## Installation
 
