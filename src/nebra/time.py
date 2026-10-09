@@ -2,8 +2,18 @@ from datetime import UTC, datetime
 
 
 def get_atproto_utc_time():
-    """Returns a maximally atproto-compatible UTC datetime.
+    """Get a maximally ATProto-compatible UTC datetime string.
     
-    See https://atproto.com/specs/lexicon#datetime
+    This function returns a datetime string in the format specified by the ATProtocol
+    lexicon, which is "YYYY-MM-DDTHH:MM:SS.sssZ".
+    
+    Returns
+    -------
+    str
+        A datetime string in ATProtocol-compatible format.
+        
+    See Also
+    --------
+    https://atproto.com/specs/lexicon#datetime : ATProtocol datetime specification
     """
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")

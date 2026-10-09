@@ -1,11 +1,11 @@
 # tests/utilities.py
 
-import json
 import threading
 import time
 import typing as t
 from typing import Any
 
+from atproto_client.models import NetworkBskyJetstreamSubscribeEvents
 from atproto_jetstream import SubscribeEventsMessage
 
 from nebra.floats import encode_floats_in_event
@@ -141,19 +141,18 @@ class DummyJetstreamClient:
             # Encode floats in the event
             encoded_event = encode_floats_in_event(event)
             
-            # Create a mock message object with the required attributes
-            message = type('SubscribeEventsMessage', (), {
-                'op': event.get("operation", "create"),
-                'seq': event.get("seq", i),
-                'collection': event.get("$type", "com.example.test"),
-                'record': encoded_event.get("record", {}),
-                'model_dump_json': lambda self: json.dumps({
-                    'op': self.op,
-                    'seq': self.seq,
-                    'collection': self.collection,
-                    'record': self.record
-                })
-            })()
+            # Build a real Commit message, as a Jetstream instance would
+            # deliver for a commit-kind event.
+            message = NetworkBskyJetstreamSubscribeEvents.Commit(
+                did="did:plc:dummydid123",
+                collection=event.get("$type", "com.example.test"),
+                operation=event.get("operation", "create"),
+                rev="3lb2xkw2vsc2q",
+                rkey=f"dummy-{i}",
+                seq=event.get("seq", i),
+                time="2026-10-09T12:00:00.000Z",
+                record=encoded_event.get("record", {}),
+            )
             
             # Call the message handler
             if self.message_handler:
