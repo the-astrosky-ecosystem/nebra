@@ -1,10 +1,10 @@
 # Nebra Docs Configuration
 # Inspired by ocelot's docs, but with a space-like theme and Nebra's structure.
 site_name: "nebra"
-site_url: https://emilyhunt.github.io/nebra/
+site_url: https://nebra.astrosky.eco
 site_author: Emily Hunt
 site_description: >-
-  Stream or send time-critical scientific data live and for free on the ATProtocol.
+  A simple Python tool that can stream or send time-critical scientific data live and for free on the ATProtocol.
 
 repo_url: https://github.com/emilyhunt/nebra
 repo_name: nebra

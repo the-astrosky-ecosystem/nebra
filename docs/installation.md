@@ -17,12 +17,3 @@ git clone https://github.com/emilyhunt/nebra.git
 cd nebra
 uv sync
 ```
-
-## Optional Dependencies
-Nebra supports optional dependencies for additional functionality:
-
-### Kafka Subscriptions
-To use Kafka subscriptions (e.g., for GCN notices), install with:
-```bash
-pip install "nebra[subscriptions]"
-```
