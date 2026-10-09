@@ -1,22 +1,16 @@
 import click
 
-from .broadcast import DataSource, RebroadcastClient
+from .broadcast import DataSource, rebroadcast
 from .client import send
 from .jetstream import stream
 from .time import get_atproto_utc_time
 
-__all__ = ["DataSource", "RebroadcastClient", "get_atproto_utc_time", "send", "stream"]
+__all__ = ["DataSource", "get_atproto_utc_time", "rebroadcast", "send", "stream"]
 
 
 @click.group()
 def cli():
-    """Command-line interface for nebra.
-    
-    Returns
-    -------
-    click.Group
-        A Click command group for the nebra CLI.
-    """
+    """Command-line interface for nebra."""
 
 
 # Add the `stream` command to the CLI group

@@ -1,6 +1,6 @@
 # Rebroadcasting data
 
-::: nebra.RebroadcastClient
+::: nebra.rebroadcast
     options:
         show_root_heading: true
 

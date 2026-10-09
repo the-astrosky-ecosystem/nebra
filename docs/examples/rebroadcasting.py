@@ -19,10 +19,10 @@ import os
 import random
 import time
 
-from nebra.rebroadcast import DataSource, RebroadcastClient
+import nebra
 
 
-class RandomEventDataSource(DataSource):
+class RandomEventDataSource(nebra.DataSource):
     """A DataSource that generates random astronomical events for demonstration purposes."""
 
     def run(self) -> None:
@@ -61,6 +61,4 @@ if __name__ == "__main__":
     print("Press Ctrl+C to stop.")
     
     data_source = RandomEventDataSource()
-    client = RebroadcastClient(data_source=data_source)
-
-    client.start(block=True)
+    nebra.rebroadcast(data_source)
