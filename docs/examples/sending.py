@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# Example script for sending data with Nebra
 """
 Sending Data with Nebra
 =======================
@@ -16,6 +16,7 @@ Example:
 """
 
 import os
+
 from nebra.client import send
 
 
@@ -51,7 +52,8 @@ if __name__ == "__main__":
     if not os.getenv("NEBRA_HANDLE") or not os.getenv("NEBRA_PASSWORD"):
         print("Error: NEBRA_HANDLE and NEBRA_PASSWORD environment variables must be set.")
         print("Please set them before running this script.")
-        exit(1)
+        import sys
+        sys.exit(1)
     
     send_text_record()
     send_custom_record()

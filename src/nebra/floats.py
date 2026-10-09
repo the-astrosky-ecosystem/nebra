@@ -15,10 +15,14 @@ FLOAT_PATTERN = re.compile(rf"^{re.escape(FLOAT_MARKER)}(.+?){re.escape(FLOAT_MA
 def encode_floats_in_event(event: dict[str, Any]) -> dict[str, Any]:
     """Recursively encode all floating point numbers in an event as specially marked strings.
     
-    Args:
-        event: The event dictionary to process.
+    Parameters
+    ----------
+    event : dict[str, Any]
+        The event dictionary to process.
         
-    Returns:
+    Returns
+    -------
+    dict[str, Any]
         A new dictionary with all floating point numbers encoded as strings.
     """
     return _encode_floats_recursive(event)
@@ -27,17 +31,32 @@ def encode_floats_in_event(event: dict[str, Any]) -> dict[str, Any]:
 def decode_floats_in_event(event: dict[str, Any]) -> dict[str, Any]:
     """Recursively decode all specially marked strings in an event back to floating point numbers.
     
-    Args:
-        event: The event dictionary to process.
+    Parameters
+    ----------
+    event : dict[str, Any]
+        The event dictionary to process.
         
-    Returns:
+    Returns
+    -------
+    dict[str, Any]
         A new dictionary with all encoded strings converted back to floating point numbers.
     """
     return _decode_floats_recursive(event)
 
 
 def _encode_floats_recursive(data: Any) -> Any:
-    """Recursively encode floating point numbers in a data structure."""
+    """Recursively encode floating point numbers in a data structure.
+    
+    Parameters
+    ----------
+    data : Any
+        The data structure to process. Can be a float, dict, list, tuple, or other type.
+        
+    Returns
+    -------
+    Any
+        The processed data structure with floats encoded as specially marked strings.
+    """
     if isinstance(data, float):
         # Encode the float as a specially marked string
         return f"{FLOAT_MARKER}{data}{FLOAT_MARKER}"
@@ -53,7 +72,18 @@ def _encode_floats_recursive(data: Any) -> Any:
 
 
 def _decode_floats_recursive(data: Any) -> Any:
-    """Recursively decode specially marked strings in a data structure."""
+    """Recursively decode specially marked strings in a data structure.
+    
+    Parameters
+    ----------
+    data : Any
+        The data structure to process. Can be a string, dict, list, tuple, or other type.
+        
+    Returns
+    -------
+    Any
+        The processed data structure with specially marked strings converted back to floats.
+    """
     if isinstance(data, str):
         # Check if the string is a specially marked float
         match = FLOAT_PATTERN.match(data)

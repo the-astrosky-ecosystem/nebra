@@ -8,7 +8,6 @@ requires-python = ">=3.11"
 dependencies = [
     "atproto>=0.0.72",
     "click>=8.3.1",
-    "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]
 
@@ -19,10 +18,10 @@ nebra = "nebra:main"
 subscriptions = [
     "gcn-kafka>=0.3.4",
 ]
-docs = [
-    "mkdocs-material[imaging]>=9.5.0",
-    "mkdocs-jupyter>=0.24.0",
-    "mkdocstrings-python>=1.7.0",
+dev = [
+    "zensical>=0.0.69",
+    "pytest>=9.1.1",
+    "mkdocstrings-python>=1.0"  # Required for API documentation
 ]
 
 [build-system]

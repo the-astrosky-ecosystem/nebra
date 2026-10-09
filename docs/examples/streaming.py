@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# Example script for streaming data with Nebra
 """
 Streaming Data with Nebra
 ========================
@@ -12,7 +12,9 @@ Example:
 import json
 import time
 import typing as t
+
 import click
+
 from nebra.jetstream import run_stream
 
 

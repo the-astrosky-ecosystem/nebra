@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# Example script for rebroadcasting data with Nebra
 """
 Rebroadcasting Data with Nebra
 =============================
@@ -18,6 +18,7 @@ Example:
 import os
 import random
 import time
+
 from nebra.rebroadcast import DataSource, RebroadcastClient
 
 
@@ -28,7 +29,7 @@ class RandomEventDataSource(DataSource):
         """Generate random events and add them to the queue."""
         print("Starting RandomEventDataSource...")
         event_id = 0
-        
+
         while not self.stop_event.is_set():
             event_id += 1
             event = {
@@ -39,10 +40,10 @@ class RandomEventDataSource(DataSource):
                 "mag": random.uniform(10, 20),  # Random Magnitude
                 "createdAt": "2026-10-09T00:00:00Z"
             }
-            
+
             if not self.add_event(event):
                 print("Failed to add event to queue (queue full)")
-            
+
             # Sleep for a random interval to simulate real-world event generation
             time.sleep(random.uniform(0.5, 2.0))
 
@@ -52,17 +53,14 @@ if __name__ == "__main__":
     if not os.getenv("NEBRA_HANDLE") or not os.getenv("NEBRA_PASSWORD"):
         print("Error: NEBRA_HANDLE and NEBRA_PASSWORD environment variables must be set.")
         print("Please set them before running this script.")
-        exit(1)
-    
+        import sys
+        sys.exit(1)
+
     # Create a data source and rebroadcast client
-    data_source = RandomEventDataSource()
-    client = RebroadcastClient(data_source=data_source)
-    
     print("Starting rebroadcast client...")
     print("Press Ctrl+C to stop.")
     
-    try:
-        client.start(block=True)
-    except KeyboardInterrupt:
-        print("\nStopping rebroadcast client...")
-        client.stop()
+    data_source = RandomEventDataSource()
+    client = RebroadcastClient(data_source=data_source)
+
+    client.start(block=True)

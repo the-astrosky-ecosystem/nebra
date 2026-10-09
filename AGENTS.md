@@ -10,6 +10,8 @@ Nebra is a Python library for streaming or sending time-critical scientific data
 
 This project uses `uv` for Python dependency management and task execution. All Python dependencies are managed through `uv`. The project configuration is in `pyproject.toml`
 
+NEVER use `uv pip` commands, as they are bad practice. Instead, use `uv add`, `uv remove`, and `uv sync --all-extras` to (re)install all packages.
+
 ## Key Commands
 
 ### After Making Changes
@@ -27,6 +29,13 @@ This project uses `uv` for Python dependency management and task execution. All 
    ```
    
    This will run all tests in the project. Make sure all tests pass before completing a task.
+
+3. **Build the docs:**
+   ```bash
+   zensical build
+   ```
+   
+   This will check that the documentation site still builds after your changes.
 
 ### Other Useful Commands
 
@@ -57,12 +66,13 @@ This project uses `uv` for Python dependency management and task execution. All 
 - Follow PEP 8 guidelines for Python code.
 - Use type hints for function parameters and return values.
 - Keep functions focused and modular.
-- Add docstrings to functions and classes.
+- Add docstrings to functions and classes, following numpy docstyle.
 
 ## Project Structure
 
 - `src/nebra/`: Main library code
 - `tests/`: Test files
+- `docs/`: Documentation for the module, written in markdown
 - `pyproject.toml`: Project configuration and dependencies
 - `uv.lock`: Lock file for dependencies
 
@@ -74,4 +84,6 @@ This project uses `uv` for Python dependency management and task execution. All 
 4. Run `ruff check --fix` to ensure code style compliance.
 5. Add or update tests as needed.
 6. Run `pytest` to verify all tests pass.
-7. Document any changes or new functionality in the final message.
+7. Add any new changes to the documentation for the module.
+8. Run `zensical build` to check that the documentation still builds.
+9. Document any changes or new functionality in the final message.
