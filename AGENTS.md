@@ -1,10 +1,10 @@
-# Agent Guidance for Nebra
+# Agent Guidance for nebra
 
-This document provides guidance for AI agents working on the Nebra project.
+This document provides guidance for AI agents working on the `nebra` project.
 
 ## Project Overview
 
-Nebra is a Python library for streaming or sending time-critical scientific data live and for free on the ATProtocol.
+`nebra` is a Python library for streaming or sending time-critical scientific data live and for free on the AT Protocol.
 
 ## Development Environment
 
@@ -75,6 +75,11 @@ NEVER use `uv pip` commands, as they are bad practice. Instead, use `uv add`, `u
 - `docs/`: Documentation for the module, written in markdown
 - `pyproject.toml`: Project configuration and dependencies
 - `uv.lock`: Lock file for dependencies
+
+## Style guide
+
+- It's AT Protocol, not ATProtocol - there should be a space
+- nebra should never be capitalized. In the docs, which are written in markdown, it should be enclosed with code tags - like `nebra`.
 
 ## Agent Workflow
 
