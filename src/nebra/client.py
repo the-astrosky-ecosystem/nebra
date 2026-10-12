@@ -160,7 +160,7 @@ class BotSessionUpdater:
         session : Session
             The current session.
         """
-        print(f"Session changed: {event!r}, {session!r}")
+        # print(f"Session changed: {event!r}, {session!r}")
         if event in (SessionEvent.CREATE, SessionEvent.REFRESH):
             self.save_session(session.export())
 

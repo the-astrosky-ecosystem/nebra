@@ -199,20 +199,20 @@ class RebroadcastClient:
         while retry_count <= self.max_retries and not self.stop_event.is_set():
             try:
                 self.send_function(event, **self.send_kwargs)
-                print(f"Successfully sent event: {event.get('eventID', 'unknown')}")
+                print("Successfully sent event")
                 return
 
             except Exception as e:
                 if retry_count >= self.max_retries:
                     print(
-                        f"Max retries exceeded for event {event.get('eventID', 'unknown')}. Error: {e}"
+                        f"Max retries exceeded for event. Event:\n{event}\nError: {e}"
                     )
                     raise
 
                 # Calculate delay with exponential backoff
                 delay = self.initial_retry_delay * (2**retry_count)
                 print(
-                    f"Failed to send event {event.get('eventID', 'unknown')}. Retry {retry_count + 1}/{self.max_retries} in {delay}s. Error: {e}"
+                    f"Failed to send event. Retry {retry_count + 1}/{self.max_retries} in {delay}s. Error: {e}"
                 )
 
                 # Wait for the delay or until stop is requested
