@@ -1,7 +1,7 @@
 [project]
 site_url = "https://nebra.astrosky.eco/"
 site_name = "nebra"
-site_description = "Stream or send time-critical scientific data live and for free on the AT Protocol, with a simple, fast Python module."
+site_description = "Stream or send time-critical data on the AT Protocol, with a simple, fast Python module."
 site_author = "The Astrosky Ecosystem"
 
 copyright = "Copyright &copy; 2026 The Astrosky Ecosystem"
@@ -56,7 +56,8 @@ features = [
   # "toc.integrate",
 ]
 
-# logo = "assets/logo.png"
+logo = "images/favicon.png"
+favicon = "images/favicon.png"
 
 [project.theme.icon]
 logo = "fontawesome/solid/satellite-dish"
@@ -133,3 +134,7 @@ default_handler = "python"
 options.docstring_style = "numpy"
 options.heading_level = 3
 # options.show_root_heading = true
+
+# [project.plugins.social]
+# enabled = true
+# cards = false

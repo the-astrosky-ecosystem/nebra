@@ -8,7 +8,6 @@ requires-python = ">=3.11"
 dependencies = [
     "atproto>=0.0.72",
     "click>=8.3.1",
-    "ruff>=0.16.10",
 ]
 
 [project.scripts]
@@ -19,9 +18,12 @@ subscriptions = [
     "gcn-kafka>=0.3.4",
 ]
 dev = [
-    "zensical>=0.0.69",
+    "zensical>=0.0.70",
+    "ruff>=0.16.10",
     "pytest>=9.1.1",
-    "mkdocstrings-python>=1.0"  # Required for API documentation
+    "mkdocstrings-python>=1.0",  # Required for API documentation
+    "Pillow",
+    "cairosvg"
 ]
 
 [build-system]
