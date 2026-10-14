@@ -19,7 +19,7 @@ cli.add_command(stream_command)
 
 def main():
     """Entry point for the nebra CLI.
-    
+
     This function is called when the `nebra` command is executed.
     It initializes and runs the Click command-line interface.
     """

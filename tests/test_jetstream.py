@@ -1,6 +1,5 @@
 # tests/test_jetstream.py
 
-import json
 import time
 
 from nebra.jetstream import _run_stream
@@ -33,13 +32,13 @@ def test_stream_with_dummy_client():
     # Check that we received the expected number of messages
     assert len(received_messages) == 3
     
-    # Check that each message is valid JSON
+    # Check that each message is a valid dict with expected fields
     for message in received_messages:
-        data = json.loads(message)
-        assert "record" in data
-        assert "float_value" in data["record"]
-        assert "nested" in data["record"]
-        assert "float_list" in data["record"]["nested"]
+        assert isinstance(message, dict)
+        assert "record" in message
+        assert "float_value" in message["record"]
+        assert "nested" in message["record"]
+        assert "float_list" in message["record"]["nested"]
 
 
 def test_stream_float_decoding():
@@ -70,8 +69,8 @@ def test_stream_float_decoding():
     
     # Check that floats were properly decoded
     for message in received_messages:
-        data = json.loads(message)
-        record = data["record"]
+        assert isinstance(message, dict)
+        record = message["record"]
         
         # Check that float values are actual numbers, not encoded strings
         assert isinstance(record["float_value"], (int, float))
