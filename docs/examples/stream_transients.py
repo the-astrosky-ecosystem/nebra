@@ -5,7 +5,11 @@ Streaming data with nebra
 This script demonstrates how to stream data from the AT Protocol Jetstream using nebra.
 """
 
+from atproto import IdResolver
+
 import nebra
+
+resolver = IdResolver()
 
 
 def handle_message(message: dict) -> None:
@@ -16,10 +20,15 @@ def handle_message(message: dict) -> None:
 
     record = message["record"]
 
-    print(
-        f"Received event {record.get('eventID', '(no ID)')}"
-    )
-    print(f"author={message.get('did', 'unknown')}")
+    did = message.get("did", None)
+    handle = None
+    if did is not None:
+        did_doc = resolver.did.resolve(did)
+        if did_doc is not None:
+            handle = did_doc.get_handle()
+
+    print(f"Received event {record.get('eventID', '(no ID)')}")
+    print(f"author={handle}")
     print(f"  time={record['time']}")
     print(f"    ra={record['ra']:.5f}")
     print(f"   dec={record['dec']:.5f}")
@@ -27,4 +36,6 @@ def handle_message(message: dict) -> None:
     print("---------------------------")
 
 
-nebra.stream(collections=["eco.astrosky.transient.example"], message_handler=handle_message)
+nebra.stream(
+    collections=["eco.astrosky.transient.example"], message_handler=handle_message
+)
