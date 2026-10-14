@@ -125,7 +125,7 @@ def gcn_producer(
                 "$type": "eco.astrosky.transient.gcn",
                 "topic": message.topic(),
                 "eventID": message.offset(),
-                "data": json.dumps(value),
+                "data": value,
                 "createdAt": get_atproto_utc_time(),
             }
 
