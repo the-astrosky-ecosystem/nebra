@@ -33,13 +33,15 @@ class RandomEventDataSource(nebra.DataSource):
                 "ra": random.uniform(0, 360),  # Random Right Ascension
                 "dec": random.uniform(-90, 90),  # Random Declination
                 "mag": random.uniform(10, 20),  # Random Magnitude
+                "eventID": event_id,
             }
-            
-            print("New event:")
+
+            print(f"Event {event_id}:")
             print(f"  time={event['time']}")
             print(f"    ra={event['ra']:.5f}")
             print(f"   dec={event['dec']:.5f}")
             print(f"  amag={event['mag']:.5f}")
+            print("---------------------------")
             self.add_event(event)
             time.sleep(random.uniform(0.5, 3))
 

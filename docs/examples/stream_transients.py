@@ -17,13 +17,14 @@ def handle_message(message: dict) -> None:
     record = message["record"]
 
     print(
-        "New transient detected!"
+        f"Received event {record.get('eventID', '(no ID)')}"
     )
     print(f"author={message.get('did', 'unknown')}")
     print(f"  time={record['time']}")
     print(f"    ra={record['ra']:.5f}")
     print(f"   dec={record['dec']:.5f}")
     print(f"  amag={record['mag']:.5f}")
+    print("---------------------------")
 
 
 nebra.stream(collections=["eco.astrosky.transient.example"], message_handler=handle_message)
