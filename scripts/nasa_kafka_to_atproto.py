@@ -26,9 +26,11 @@ def _remove_large_fields(value):
         value["external_coinc"].pop("combined_skymap")
 
 
-def get_consumer(client_id: str, client_secret: str, topics: list | None = None) -> Consumer:
+def get_consumer(
+    client_id: str, client_secret: str, topics: list | None = None
+) -> Consumer:
     """Create and configure a GCN Kafka consumer.
-    
+
     Parameters
     ----------
     client_id : str
@@ -37,35 +39,44 @@ def get_consumer(client_id: str, client_secret: str, topics: list | None = None)
         GCN Kafka client secret.
     topics : list, optional
         List of topics to subscribe to. If None, uses default topics.
-        
+
     Returns
     -------
     Consumer
         Configured GCN Kafka consumer.
     """
     consumer = Consumer(client_id=client_id, client_secret=client_secret)
-    
+
     # Use provided topics or default topics
-    topics_to_subscribe = topics if topics is not None else [
-        "gcn.circulars",
-        "gcn.notices.chime.frb",
-        "gcn.notices.dsa110.frb",
-        "gcn.notices.einstein_probe.wxt.alert",
-        "gcn.notices.icecube.lvk_nu_track_search",
-        "gcn.notices.icecube.gold_bronze_track_alerts",
-        "igwn.gwalert",
-        "gcn.notices.superk.sn_alert",
-        "gcn.notices.swift.bat.guano",
-        "gcn.heartbeat",
-    ]
-    
+    topics_to_subscribe = (
+        topics
+        if topics is not None
+        else [
+            "gcn.circulars",
+            "gcn.notices.chime.frb",
+            "gcn.notices.dsa110.frb",
+            "gcn.notices.einstein_probe.wxt.alert",
+            "gcn.notices.icecube.lvk_nu_track_search",
+            "gcn.notices.icecube.gold_bronze_track_alerts",
+            "igwn.gwalert",
+            "gcn.notices.superk.sn_alert",
+            "gcn.notices.swift.bat.guano",
+            "gcn.heartbeat",
+        ]
+    )
+
     consumer.subscribe(topics_to_subscribe)
     return consumer
 
 
-def gcn_producer(data_source: DataSource, client_id: str, client_secret: str, topics: list | None = None) -> None:
+def gcn_producer(
+    data_source: DataSource,
+    client_id: str,
+    client_secret: str,
+    topics: list | None = None,
+) -> None:
     """Run the GCN event producer, handling its own error recovery.
-    
+
     Parameters
     ----------
     data_source : DataSource
@@ -105,9 +116,7 @@ def gcn_producer(data_source: DataSource, client_id: str, client_secret: str, to
                 continue
 
             # Fetch the message
-            print(
-                f"\nNew message! topic={message.topic()}, offset={message.offset()}"
-            )
+            print(f"\nNew message! topic={message.topic()}, offset={message.offset()}")
             value = json.loads(message.value())
             _remove_large_fields(value)
 
@@ -127,21 +136,17 @@ def gcn_producer(data_source: DataSource, client_id: str, client_secret: str, to
 if __name__ == "__main__":
     # Start the rebroadcast client
     print("Starting NASA GCN Kafka to ATProto rebroadcast...")
-    
+
     # Get credentials from environment variables
     client_id = os.getenv("GCN_CLIENT_ID")
     client_secret = os.getenv("GCN_CLIENT_SECRET")
-    
+
     if client_id is None or client_secret is None:
         raise ValueError(
             "You must set the GCN_CLIENT_ID and GCN_CLIENT_SECRET env variables."
         )
-    
+
     # Start rebroadcasting with the GCN producer
     rebroadcast(
-        producer_function=gcn_producer,
-        kwargs={
-            "client_id": client_id,
-            "client_secret": client_secret
-        }
+        gcn_producer, kwargs={"client_id": client_id, "client_secret": client_secret}
     )

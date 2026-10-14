@@ -396,7 +396,7 @@ class RebroadcastClient:
 
 
 def rebroadcast(
-    producer_function: t.Callable,
+    target: t.Callable,
     args: tuple = (),
     kwargs: dict | None = None,
     max_retries: int = 7,
@@ -414,7 +414,7 @@ def rebroadcast(
 
     Parameters
     ----------
-    producer_function : Callable
+    target : Callable
         A function that produces events and adds them to the data source.
         This function should take a DataSource as its first argument, followed by
         any additional arguments specified in args and kwargs.
@@ -432,7 +432,7 @@ def rebroadcast(
         Additional keyword arguments to pass to the send function.
     """
     client = RebroadcastClient(
-        producer_function=producer_function,
+        producer_function=target,
         producer_args=args,
         producer_kwargs=kwargs,
         max_retries=max_retries,
