@@ -3,9 +3,9 @@ import click
 from .broadcast import DataSource, rebroadcast
 from .client import send
 from .jetstream import stream, stream_command
-from .time import get_atproto_utc_time
+from .time import atproto_timestamp_to_datetime, get_atproto_utc_time
 
-__all__ = ["DataSource", "get_atproto_utc_time", "rebroadcast", "send", "stream"]
+__all__ = ["DataSource", "atproto_timestamp_to_datetime", "get_atproto_utc_time", "rebroadcast", "send", "stream"]
 
 
 @click.group()
