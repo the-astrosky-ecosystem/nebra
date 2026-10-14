@@ -1,5 +1,6 @@
 # tests/utilities.py
 
+import queue
 import threading
 import time
 import typing as t
@@ -8,40 +9,48 @@ from typing import Any
 from atproto_client.models import NetworkBskyJetstreamSubscribeEvents
 from atproto_jetstream import SubscribeEventsMessage
 
-from nebra.broadcast import DataSource
 from nebra.floats import encode_floats_in_event
 
 
-class DummyDataSource(DataSource):
-    """A dummy data source for testing that generates simple events."""
+class DummyDataSource:
+    """A simple DataSource-like class for testing basic DataSource functionality."""
+    
+    def __init__(self, max_queue_size: int = 1000):
+        """Initialize the dummy data source."""
+        self._event_queue = queue.Queue(maxsize=max_queue_size)
+        self.stop_event = threading.Event()
+        self._producer_last_active = time.time()
+        self._producer_active_lock = threading.Lock()
 
-    def __init__(self, max_queue_size: int = 1000, event_delay: float = 0.1):
-        """Initialize the dummy data source.
-
-        Args:
-            max_queue_size: Maximum size of the event queue.
-            event_delay: Delay between events in seconds.
-        """
-        super().__init__(max_queue_size)
-        self.event_delay = event_delay
-        self.event_counter = 0
-
-    def run(self) -> None:
-        """Run the dummy data source, generating simple test events."""
-        while not self.stop_event.is_set():
-            # Generate a simple event with a $type and value field
-            event = {
-                "$type": "com.example.test",
-                "value": f"test_value_{self.event_counter}",
-                "counter": self.event_counter,
-            }
+    def add_event(self, event: dict[str, Any]) -> bool:
+        """Add an event to the queue."""
+        try:
+            self._event_queue.put_nowait(event)
+            return True
+        except queue.Full:
+            return False
             
-            # Add the event to the queue
-            self.add_event(event)
-            self.event_counter += 1
+    def get_event(self, timeout: float | None = None) -> dict[str, Any]:
+        """Get an event from the queue."""
+        return self._event_queue.get(timeout=timeout)
+
+    def stop(self) -> None:
+        """Signal the data source to stop."""
+        self.stop_event.set()
+        
+    def is_active(self) -> bool:
+        """Check if the data source is active (not stopped)."""
+        return not self.stop_event.is_set()
+        
+    def mark_producer_running(self) -> None:
+        """Mark the producer as running by recording the current time."""
+        with self._producer_active_lock:
+            self._producer_last_active = time.time()
             
-            # Sleep for the specified delay
-            time.sleep(self.event_delay)
+    def producer_last_signal(self) -> float:
+        """Get the number of seconds since mark_producer_running() was last called."""
+        with self._producer_active_lock:
+            return time.time() - self._producer_last_active
 
 
 def dummy_send(event: dict, **kwargs: Any) -> None:

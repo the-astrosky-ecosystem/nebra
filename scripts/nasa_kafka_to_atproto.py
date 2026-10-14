@@ -9,7 +9,7 @@ import time
 from gcn_kafka import Consumer
 
 from nebra import get_atproto_utc_time
-from nebra.rebroadcast import DataSource, RebroadcastClient
+from nebra.broadcast import DataSource, rebroadcast
 
 
 def _remove_large_fields(value):
@@ -26,90 +26,122 @@ def _remove_large_fields(value):
         value["external_coinc"].pop("combined_skymap")
 
 
-class GCNDataSource(DataSource):
-    """DataSource implementation for NASA GCN Kafka stream."""
+def get_consumer(client_id: str, client_secret: str, topics: list | None = None) -> Consumer:
+    """Create and configure a GCN Kafka consumer.
+    
+    Parameters
+    ----------
+    client_id : str
+        GCN Kafka client ID.
+    client_secret : str
+        GCN Kafka client secret.
+    topics : list, optional
+        List of topics to subscribe to. If None, uses default topics.
+        
+    Returns
+    -------
+    Consumer
+        Configured GCN Kafka consumer.
+    """
+    consumer = Consumer(client_id=client_id, client_secret=client_secret)
+    
+    # Use provided topics or default topics
+    topics_to_subscribe = topics if topics is not None else [
+        "gcn.circulars",
+        "gcn.notices.chime.frb",
+        "gcn.notices.dsa110.frb",
+        "gcn.notices.einstein_probe.wxt.alert",
+        "gcn.notices.icecube.lvk_nu_track_search",
+        "gcn.notices.icecube.gold_bronze_track_alerts",
+        "igwn.gwalert",
+        "gcn.notices.superk.sn_alert",
+        "gcn.notices.swift.bat.guano",
+        "gcn.heartbeat",
+    ]
+    
+    consumer.subscribe(topics_to_subscribe)
+    return consumer
 
-    def __init__(self, max_queue_size: int = 1000):
-        super().__init__(max_queue_size=max_queue_size)
-        self.client_id = os.getenv("GCN_CLIENT_ID", None)
-        self.client_secret = os.getenv("GCN_CLIENT_SECRET", None)
 
-        if self.client_id is None or self.client_secret is None:
-            raise ValueError(
-                "You must set the GCN_CLIENT_ID and GCN_CLIENT_SECRET env variables."
-            )
+def gcn_producer(data_source: DataSource, client_id: str, client_secret: str, topics: list | None = None) -> None:
+    """Run the GCN event producer, handling its own error recovery.
+    
+    Parameters
+    ----------
+    data_source : DataSource
+        The data source to add events to.
+    client_id : str
+        GCN Kafka client ID.
+    client_secret : str
+        GCN Kafka client secret.
+    topics : list, optional
+        List of topics to subscribe to. If None, uses default topics.
+    """
+    print(f"Starting GCN producer for topics: {topics or 'default topics'}")
+    consumer = get_consumer(client_id, client_secret, topics)
 
-    def get_consumer(self) -> Consumer:
-        """Create and configure a GCN Kafka consumer."""
-        consumer = Consumer(client_id=self.client_id, client_secret=self.client_secret)
-        consumer.subscribe(
-            [
-                "gcn.circulars",
-                "gcn.notices.chime.frb",
-                "gcn.notices.dsa110.frb",
-                "gcn.notices.einstein_probe.wxt.alert",
-                "gcn.notices.icecube.lvk_nu_track_search",
-                "gcn.notices.icecube.gold_bronze_track_alerts",
-                "igwn.gwalert",
-                "gcn.notices.superk.sn_alert",
-                "gcn.notices.swift.bat.guano",
-                "gcn.heartbeat",
-            ]
-        )
-        return consumer
+    while data_source.is_active():
+        try:
+            messages = consumer.consume(timeout=1)
 
-    def run(self) -> None:
-        """Run the event source, handling its own error recovery."""
-        consumer = self.get_consumer()
+        except Exception as e:  # noqa
+            print(f"Error in GCN data source: {e}")
 
-        while not self.stop_event.is_set():
-            try:
-                messages = consumer.consume(timeout=1)
+            # Wait before retrying
+            time.sleep(5)
 
-            except Exception as e:  # noqa
-                print(f"Error in GCN data source: {e}")
+            # Reset consumer
+            consumer = get_consumer(client_id, client_secret, topics)
+            continue
 
-                # Wait before retrying
-                time.sleep(5)
-
-                # Reset consumer
-                consumer = self.get_consumer()
+        for message in messages:
+            if message.error():
+                print(f"Message error: {message.error()}")
                 continue
 
-            for message in messages:
-                if message.error():
-                    print(f"Message error: {message.error()}")
-                    continue
+            if message.topic() == "gcn.heartbeat":
+                print(f"\rLast heartbeat: {get_atproto_utc_time()}", end="")
+                data_source.mark_producer_running()
+                continue
 
-                if message.topic() == "gcn.heartbeat":
-                    print(f"\rLast heartbeat: {get_atproto_utc_time()}", end="")
-                    continue
+            # Fetch the message
+            print(
+                f"\nNew message! topic={message.topic()}, offset={message.offset()}"
+            )
+            value = json.loads(message.value())
+            _remove_large_fields(value)
 
-                # Fetch the message
-                print(
-                    f"\nNew message! topic={message.topic()}, offset={message.offset()}"
-                )
-                value = json.loads(message.value())
-                _remove_large_fields(value)
+            # Create & add the event
+            event = {
+                "$type": "eco.astrosky.transient.gcn",
+                "topic": message.topic(),
+                "eventID": message.offset(),
+                "data": json.dumps(value),
+                "createdAt": get_atproto_utc_time(),
+            }
 
-                # Create & add the event
-                event = {
-                    "$type": "eco.astrosky.transient.gcn",
-                    "topic": message.topic(),
-                    "eventID": message.offset(),
-                    "data": json.dumps(value),
-                    "createdAt": get_atproto_utc_time(),
-                }
-
-                self.add_event(event)
-                print("Added event to queue\n")
+            data_source.add_event(event)
+            print("Added event to queue\n")
 
 
 if __name__ == "__main__":
-    # Start the rebroadcast client with our data source
+    # Start the rebroadcast client
     print("Starting NASA GCN Kafka to ATProto rebroadcast...")
-
-    # Create the data source and client
-    data_source = GCNDataSource(max_queue_size=1000)
-    client = RebroadcastClient(data_source=data_source)
-    client.start()
+    
+    # Get credentials from environment variables
+    client_id = os.getenv("GCN_CLIENT_ID")
+    client_secret = os.getenv("GCN_CLIENT_SECRET")
+    
+    if client_id is None or client_secret is None:
+        raise ValueError(
+            "You must set the GCN_CLIENT_ID and GCN_CLIENT_SECRET env variables."
+        )
+    
+    # Start rebroadcasting with the GCN producer
+    rebroadcast(
+        producer_function=gcn_producer,
+        kwargs={
+            "client_id": client_id,
+            "client_secret": client_secret
+        }
+    )
