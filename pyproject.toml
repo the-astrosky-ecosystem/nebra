@@ -16,6 +16,7 @@ nebra = "nebra:main"
 [project.optional-dependencies]
 subscriptions = [
     "gcn-kafka>=0.3.4",
+    "astro-colibri"
 ]
 dev = [
     "zensical>=0.0.70",
